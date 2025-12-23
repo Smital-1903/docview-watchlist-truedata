@@ -2,7 +2,6 @@ import React from "react";
 import { DockviewReact } from "dockview";
 import "dockview/dist/styles/dockview.css";
 
-// Import Components
 import TradeSearch from "./TradeSearch";
 import TradeDisplay from "./TradeDisplay";
 import { WatchlistProvider } from "./WatchlistContext";
