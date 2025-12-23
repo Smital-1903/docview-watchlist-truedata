@@ -1,13 +1,80 @@
-import React from "react";
+import React, { useState, useRef } from "react";
+import axios from "axios";
 import { useWatchlist } from "./WatchlistContext";
 
 export default function TradeDisplay() {
   // Get Data & Unsubscribe function from Context
-  const { marketData, handleRemoveSymbol } = useWatchlist();
+  const { marketData, handleRemoveSymbol , status, handleAddSymbol, credentials} = useWatchlist();
   const formatPrice = (price) => parseFloat(price).toFixed(2);
 
+  // Local State for inputs
+  const [inputText, setInputText] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const debounceTimeout = useRef(null);
+
+  // Search API Logic
+  const fetchSuggestions = async (query) => {
+    if (!query || !credentials) return;
+    const { user, pass } = credentials;
+    const url = `https://api.truedata.in/getAllSymbols?user=${user}&password=${pass}&segment=all&search=${query.toUpperCase()}`;
+
+    try {
+        const res = await axios.get(url);
+        const allRecords = res.data.Records || [];
+        const top10 = allRecords.slice(0, 10);
+        const parsedData = top10.map(item => {
+            if (Array.isArray(item)) {
+                return { id: item[0], symbol: item[1], name: item[2] };
+            } else {
+                return { id: item.Symbol_ID, symbol: item.Symbol, name: item.Name || item.Description };
+            }
+        });
+        setSuggestions(parsedData);
+        setShowDropdown(true);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setInputText(val);
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(() => fetchSuggestions(val), 300);
+  };
+
+  const selectSuggestion = (symbol) => {
+      handleAddSymbol(symbol); 
+      setInputText("");
+      setShowDropdown(false);
+  }
+
   return (
-      <div style={{ height: "100%", overflow: "auto", background:"#464058ff"}}>
+    <div>
+      <div style={{ padding: "10px", background:"#464058ff", height: "100%"  }}>
+      {/* 2. Search Row */}
+      <div style={{ position: "relative", width: "100%" }}>
+        <input 
+            type="text" 
+            value={inputText} 
+            onChange={handleInputChange} 
+            disabled={!credentials} 
+            placeholder={credentials ? "Add Symbol (e.g. RELIANCE)" : "Connect to search..."} 
+            style={{ padding: "8px", width: "100%" ,color:"wheat", background:"#464058ff"}} 
+        />
+        
+        {/* Dropdown Results */}
+        {showDropdown && suggestions.length > 0 && (
+            <ul style={{ position: "absolute", top: "100%", left: 0, width: "100%", color:"wheat", background:"#464058ff", border: "1px solid #ccc", listStyle: "none", padding: 0, zIndex: 1000, margin: 0 }}>
+                {suggestions.map((item, idx) => (
+                    <li key={idx} onClick={() => selectSuggestion(item.symbol)} style={{ padding: "8px", cursor: "pointer", borderBottom: "1px solid #eee" }}>
+                        <b>{item.symbol}</b> <span style={{fontSize:"11px", color:"#666"}}>{item.name}</span>
+                    </li>
+                ))}
+            </ul>
+        )}
+      </div>
+    </div>
+    <div style={{ height: "100%", overflow: "auto", background:"#464058ff"}}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize:"13px", fontFamily: "Arial" }}>
           <thead style={{ background: "#0a0a0aff", color: "white", position: "sticky", top: 0 }}>
             
@@ -65,5 +132,7 @@ export default function TradeDisplay() {
           </tbody>
         </table>
       </div>
+    </div>
+      
   );
 }

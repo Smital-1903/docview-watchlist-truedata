@@ -2,14 +2,14 @@ import React from "react";
 import { DockviewReact } from "dockview";
 import "dockview/dist/styles/dockview.css";
 
-// Import NEW Components
+// Import Components
 import TradeSearch from "./TradeSearch";
 import TradeDisplay from "./TradeDisplay";
 import { WatchlistProvider } from "./WatchlistContext";
 
 // Define Panel Wrappers (Simple wrappers for Dockview)
-const TopPanel = () => <div style={{ height:"100%", background:"white", overflow:"hidden" }}><TradeSearch /></div>;
-const ListPanel = () => <div style={{ height:"100%", background:"white", overflow:"hidden" }}><TradeDisplay /></div>;
+const TopPanel = () => <div style={{ height:"100%", background:"#464058ff", overflow:"hidden" }}><TradeSearch /></div>;
+const ListPanel = () => <div style={{ height:"100%", background:"#464058ff", overflow:"hidden" }}><TradeDisplay /></div>;
 
 const components = {
   top_panel: TopPanel,
@@ -25,7 +25,7 @@ export default function TradeDashboard() {
       id: "p_top",
       component: "top_panel",
       title: "Connection & Search",
-      size: 130, 
+      size: 100, 
     });
 
     // 2. Add List Panel (Watchlist) BELOW the top panel
@@ -38,9 +38,8 @@ export default function TradeDashboard() {
   };
 
   return (
-    // Wrap EVERYTHING in the Provider so they share data
     <WatchlistProvider>
-      <div style={{ height: "100vh", width: "100vw", background: "#333" }}>
+      <div style={{ height: "100vh", width: "100vw", background: "#464058ff" }}>
         <DockviewReact 
             components={components} 
             onReady={onReady} 
